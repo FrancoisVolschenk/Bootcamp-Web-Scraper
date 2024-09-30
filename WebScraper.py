@@ -3,6 +3,7 @@ import urllib.request as request
 import urllib.parse as parse
 
 URL_FILE = "urls.csv"
+WRITE_BATCH = 3
 
 def class_empty(soup):
     return soup.find(attrs={'class':'empty'}) is not None
@@ -16,7 +17,9 @@ def result_not_found(soup):
 def scrape_images():
     with open(URL_FILE, "w") as fl_urls:
         with open("issues.csv", "r") as fl_issues:
+            counter = 0
             for issue in fl_issues:
+                counter += 1
                 try:
                     issue_id, title, series_no = issue.strip().split(",")
                     
@@ -48,14 +51,16 @@ def scrape_images():
 
                             # Some of the image urls are hosted on the site, others are referred to by external URLS
                             if (i['src']).startswith("http"):
-                                fl_urls.write(f"{issue_id},{i['src']},/images/{title}.jpg")
+                                fl_urls.write(f"{issue_id},{i['src']},/images/{title}.jpg\n")
                                 # request.urlretrieve(i['src'], f"images/{title}.jpg")
                             else:
-                                fl_urls.write(f"{issue_id},https://www.coverbrowser.com{i['src']},/images/{title}.jpg")
+                                fl_urls.write(f"{issue_id},https://www.coverbrowser.com{i['src']},/images/{title}.jpg\n")
                                 # request.urlretrieve(f"https://www.coverbrowser.com{i['src']}", f"images/{title}.jpg")
                             break
+                    if counter % WRITE_BATCH == 0:
+                        fl_urls.flush()
                 except:
                     print("cant find anything for " + issue.strip())
 
-if __name__ == "main":
+if __name__ == "__main__":
     scrape_images()
